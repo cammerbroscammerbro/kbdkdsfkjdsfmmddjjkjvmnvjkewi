@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front AI - UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        header, footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #111;
+        }
+
+        .container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #code-output {
+            margin-top: 20px;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            color: #0f0;
+        }
+
+        .copy-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .copy-button:hover {
+            background-color: #218838;
+        }
+
+        #loading-message {
+            display: none;
+            margin-top: 10px;
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Front AI - Convert UI Images to Code</h1>
+    </header>
+    <div class="container">
+        <input type="file" id="image-upload" accept="image/*">
+        <button id="generate-code">Generate Code</button>
+        <div id="loading-message">Generating code, please wait...</div>
+        <div id="code-output">Generated code will appear here...</div>
+        <button class="copy-button" id="copy-code" style="display: none;">Copy Code</button>
+    </div>
+    <footer>
+        &copy; 2025 Front AI. All Rights Reserved.
+    </footer>
+
+    <script>
+        document.getElementById('generate-code').addEventListener('click', async () => {
+            const fileInput = document.getElementById('image-upload');
+            const output = document.getElementById('code-output');
+            const copyButton = document.getElementById('copy-code');
+            const generateButton = document.getElementById('generate-code');
+            const loadingMessage = document.getElementById('loading-message');
+
+            if (!fileInput.files.length) {
+                output.textContent = "Please upload an image first.";
+                copyButton.style.display = "none";
+                return;
+            }
+
+            generateButton.style.display = "none"; // Hide the button during processing
+            loadingMessage.style.display = "block"; // Show the loading message
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/process-image', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    output.textContent = `Error: ${data.error}`;
+                    copyButton.style.display = "none";
+                } else {
+                    output.textContent = `Description: ${data.description}\nColor: ${data.color}\nGenerated Code:\n${data.generated_code}`;
+                    copyButton.style.display = "inline-block";
+                    copyButton.onclick = () => {
+                        navigator.clipboard.writeText(data.generated_code).then(() => {
+                            alert('Code copied to clipboard!');
+                        }).catch(err => {
+                            alert('Failed to copy code: ' + err);
+                        });
+                    };
+                }
+            } catch (error) {
+                output.textContent = `Failed to connect to the server: ${error.message}`;
+                copyButton.style.display = "none";
+            } finally {
+                generateButton.style.display = "inline-block"; // Show the button after processing
+                loadingMessage.style.display = "none"; // Hide the loading message
+            }
+        });
+    </script>
+</body>
+</html>
