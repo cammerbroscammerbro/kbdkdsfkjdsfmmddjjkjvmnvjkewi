@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS  # Import CORS
 import torch
 from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
@@ -10,8 +11,11 @@ import logging
 
 app = Flask(__name__)
 
+# Enable CORS for all routes
+CORS(app)
+
 # Set your OpenAI API key directly (NOT RECOMMENDED for production)
-openai.api_key = "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"
+openai.api_key = "your-openai-api-key"
 
 html_element_descriptions = {
     "button": "A clickable button, often used for submitting forms or triggering actions.",
@@ -63,10 +67,8 @@ def generate_html_css(description, color):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful web development assistant."},
-                {"role": "user", "content": prompt},
-            ]
+            messages=[{"role": "system", "content": "You are a helpful web development assistant."},
+                      {"role": "user", "content": prompt}],
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
